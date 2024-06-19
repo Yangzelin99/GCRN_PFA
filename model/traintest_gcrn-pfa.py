@@ -179,7 +179,7 @@ parser.add_argument("--epochs", type=int, default=500, help="number of epochs of
 parser.add_argument("--patience", type=int, default=20, help="patience used for early stop")
 parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.01, help="base learning rate")
-parser.add_argument("--steps", type=eval, default=[25, 50], help="steps")
+parser.add_argument("--steps", type=eval, default=[50, 100], help="steps")
 parser.add_argument("--lr_decay_ratio", type=float, default=0.1, help="lr_decay_ratio")
 parser.add_argument("--epsilon", type=float, default=1e-3, help="optimizer epsilon")
 parser.add_argument("--max_grad_norm", type=int, default=5, help="max_grad_norm")
