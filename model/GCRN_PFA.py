@@ -5,7 +5,7 @@ import numpy as np
 
 class Parameter_Free_Attention(nn.Module):
     def __init__(self, e_lambda=1e-4):
-        super(ParameterFreeAttention, self).__init__()
+        super(Parameter_Free_Attention, self).__init__()
         self.activation = nn.Sigmoid()
         self.e_lambda = e_lambda
 
