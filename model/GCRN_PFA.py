@@ -3,35 +3,30 @@ from torch import nn
 from torch.nn import functional as F
 import numpy as np
 
-class simam_module(torch.nn.Module):
-    def __init__(self, channels = None, e_lambda = 1e-4):
-        super(simam_module, self).__init__()
-
-        self.activaton = nn.Sigmoid()
+class Parameter_Free_Attention(nn.Module):
+    def __init__(self, e_lambda=1e-4):
+        super(ParameterFreeAttention, self).__init__()
+        self.activation = nn.Sigmoid()
         self.e_lambda = e_lambda
 
     def __repr__(self):
-        s = self.__class__.__name__ + '('
-        s += ('lambda=%f)' % self.e_lambda)
-        return s
+        return f"{self.__class__.__name__}(lambda={self.e_lambda})"
 
     @staticmethod
     def get_module_name():
-        return "simam"
+        return "parameter_free_attention"
 
     def forward(self, x):
-
-        b1,  h1, w1 = x.size()
+        b1, h1, w1 = x.size()
         x = x.view(b1, -1, h1, w1)
-        b,  c, h, w = x.size()
+        b, c, h, w = x.size()
 
         n = w * h - 1
 
-        x_minus_mu_square = (x - x.mean(dim=[2,3], keepdim=True)).pow(2)
-        y = x_minus_mu_square / (4 * (x_minus_mu_square.sum(dim=[2,3], keepdim=True) / n + self.e_lambda)) + 0.5
-        out = x * self.activaton(y)
-        out = out.view(b1, h1, w1)
-        return out
+        x_minus_mu_square = (x - x.mean(dim=[2, 3], keepdim=True)).pow(2)
+        y = x_minus_mu_square / (4 * (x_minus_mu_square.sum(dim=[2, 3], keepdim=True) / n + self.e_lambda)) + 0.5
+        out = x * self.activation(y)
+        return out.view(b1, h1, w1)
 
 class AGCN(nn.Module):
     def __init__(self, dim_in, dim_out, cheb_k):
@@ -165,7 +160,7 @@ class GCRN_PFA(nn.Module):
         # encoder
         self.encoder = ADCRNN_Encoder(self.num_nodes, self.input_dim, self.rnn_units, self.cheb_k, self.num_layers)
 
-        self.simam = simam_module()
+        self.PFA = Parameter_Free_Attention()
 
         # deocoder
         self.decoder_dim = self.rnn_units + self.mem_dim
@@ -201,9 +196,10 @@ class GCRN_PFA(nn.Module):
 
         h_t = h_en[:, -1, :, :]  # B, N, hidden (last state)
 
-        #h_att, query, pos, neg = self.query_memory(h_t)
         h_t = torch.cat([h_t, h_t], dim=-1)
-
+        
+        h_t = self.PFA(h_t)
+        
         ht_list = [h_t] * self.num_layers
 
         go = torch.zeros((x.shape[0], self.num_nodes, self.output_dim), device=x.device)
